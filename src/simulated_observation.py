@@ -21,22 +21,22 @@ from astropy.io import fits
 import time
 
 ## USER-DEFINED ##
-PLOT, SAVE= True, True # Toggle if plotting/ saving fits files are to be enabled/ disabled.
-project_path= '/home/janmejoyarch/Dropbox/Janmejoy_SUIT_Dropbox/photometry/stellar_photometry_focus/stellar_observation_simulation/'
+PLOT, SAVE= True, False # Toggle if plotting/ saving fits files are to be enabled/ disabled.
+project_path= '/home/janmejoyarch/Dropbox/Janmejoy_SUIT_Dropbox/photometry/stellar_photometry_focus/stellar_observation_simulator/'
 h,w= 320, 320 # Size of canvas (height, width)
 frames= 100 # Total frames to be generated
 rms_pos= 35 # RMS of fluctuation in position
-peak_intensity= 66 # Peak intensity of PSF in photo electrons.
+peak_intensity= 2083 # Peak intensity of PSF in photo electrons.
 BIAS=1500 # Bias value (photo electron)
 ##################
 
 sav= os.path.join(project_path, 'data/processed') #Path to save generated files
 psf= fits.open(os.path.join(project_path, 'data/interim/psf.fits'))[0].data #PSF file
+star= psf*peak_intensity/np.sum(psf)
 
 plt.figure()
 for frame in range(frames):
     canvas= np.zeros((h,w))
-    star= psf*peak_intensity
     # Generate the offset of PSF positioning from frame center.
     del_c, del_r= np.random.normal(loc=0, scale=rms_pos), np.random.normal(loc=0, scale=rms_pos) 
     # Replace a portion of the canvas with the pixel data 

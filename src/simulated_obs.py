@@ -24,18 +24,18 @@ def sim_obs(del_c, del_r, peak_intensity, h=320, w=320, BIAS=1500):
 
     return canvas
 if __name__=='__main__':
-   # Dictionary of photoelectrons per pixel per second
-   pe={'NB01': 2083,
-       'NB02': 694,
-       'NB03': 694,
-       'NB04': 833,
-       'NB05': 1042,
-       'NB06': 1190,
-       'NB07': 1389,
-       'NB08': 46,
-       'BB01': 8333,
-       'BB02': 833,
-       'BB03': 1389
+   # Dictionary of photoelectrons/pixel/second * degradation_factor
+   pe={'NB01': 2083*0.5,
+       'NB02': 694*0.5,
+       'NB03': 694*0.5,
+       'NB04': 833*0.5,
+       'NB05': 1042*0.5,
+       'NB06': 1190*1,
+       'NB07': 1389*1,
+       'NB08': 46*1,
+       'BB01': 8333*1,
+       'BB02': 833*1,
+       'BB03': 1389*1
     }
 
    image= sim_obs(10, 10, peak_intensity=pe['NB02'])
