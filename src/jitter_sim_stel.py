@@ -6,7 +6,7 @@ import argparse
 from astropy.time import Time
 import os
 
-def jit_sim(idx=200, sun_c_path='/Users/soumyaroy/Desktop/masterlimbfit/', plot=True, save=True, plot_save_path=None):
+def jit_sim(ftr_name, save, sun_c_path, plot=True, plot_save_path=None, date_str=None):
     # Define paths
     current_file_path = os.path.abspath(__file__)
     project_path = os.path.dirname(current_file_path)
@@ -18,13 +18,22 @@ def jit_sim(idx=200, sun_c_path='/Users/soumyaroy/Desktop/masterlimbfit/', plot=
     if plot_save_path:
         os.makedirs(plot_save_path, exist_ok=True)  # Create the directory to save plots if not exists
 
-    # Load Sun center fit data
-    files = sorted(glob(f'{sun_c_path}*.suncentre'))
-    if idx >= len(files):
-        print(f"Index {idx} is out of range. Found {len(files)} files.")
+    # Search for a file that matches the provided date string
+    if date_str:
+        files = sorted(glob(f'{sun_c_path}*.suncentre'))
+        matching_files = [f for f in files if date_str in os.path.basename(f)]
+        
+        if len(matching_files) == 0:
+            print(f"No file found for the date: {date_str}")
+            return
+        elif len(matching_files) > 1:
+            print(f"Multiple files found for the date: {date_str}. Using the first one.")
+        
+        f = matching_files[0]
+        print(f"Using file: {f}")
+    else:
+        print("No date provided. Please provide a valid date.")
         return
-    f = files[idx]
-    print(f"Using file: {f}")
     
     # Define the dtype: str for the first column (date), float for the remaining columns
     dtype = [('date', 'U25'), ('x', 'f8'), ('dx', 'f8'), ('y', 'f8'), ('dy', 'f8'), ('r', 'f8'), ('dr', 'f8')]
@@ -52,7 +61,7 @@ def jit_sim(idx=200, sun_c_path='/Users/soumyaroy/Desktop/masterlimbfit/', plot=
     # Loop through frames and simulate observations
     for frame in range(frames):
         try:
-            canvas = sim_obs(x[frame], y[frame])  # Simulate the observation
+            canvas = sim_obs(x[frame], y[frame], ftr_name)  # Simulate the observation
             
             if plot:
                 plt.clf()  # Clear the current figure to update it
@@ -63,7 +72,7 @@ def jit_sim(idx=200, sun_c_path='/Users/soumyaroy/Desktop/masterlimbfit/', plot=
                 plt.pause(0.05)  # Adjust to control the update speed
             
             if save:
-                save_path = os.path.join(sav, f'{frame}.fits')
+                save_path = os.path.join(sav, f'{ftr_name}_{frame}.fits')
                 fits.writeto(save_path, canvas, overwrite=True)
                 print(f"Frame {frame}: Saved {save_path}")
             
@@ -89,8 +98,10 @@ def jit_sim(idx=200, sun_c_path='/Users/soumyaroy/Desktop/masterlimbfit/', plot=
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--sun_c_path', type=str, default='/Users/soumyaroy/Desktop/masterlimbfit/', help='Path to the project directory')
-    parser.add_argument('--idx', type=int, default=200, help='Index of suncenter file to be used')
+    parser.add_argument('--date', type=str, required=True, help='Date of the suncenter file to be used (in format YYYY-MM-DD)')
+    parser.add_argument('--ftr_name', type=str, help='Name of the filter to be simulated. Allowed values are: NB01, NB02, NB03, NB04, NB05, NB06, NB07, NB08, BB01, BB02, BB03')
     parser.add_argument('--plot_save_path', type=str, default=None, help='Path to save the individual plots')
+    parser.add_argument('--save', action='store_true', help='Flag to save the fits files in ../data/processed (default False)')
     args = parser.parse_args()
 
-    jit_sim(sun_c_path=args.sun_c_path, idx=args.idx, save=False, plot_save_path=args.plot_save_path)
+    jit_sim(sun_c_path=args.sun_c_path, ftr_name=args.ftr_name, save=args.save, plot_save_path=args.plot_save_path, date_str=args.date)
