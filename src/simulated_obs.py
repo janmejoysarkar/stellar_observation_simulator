@@ -5,14 +5,15 @@ import os
 from astropy.io import fits
 import time
 
-def sim_obs(del_c, del_r, total_intensity, h=320, w=320, BIAS=1500):
+def sim_obs(del_c, del_r, ftr_name, h=320, w=320, BIAS=1500):
     '''
     This function generates stellar observation simulated images
     based on SUIT PSF and degradation_factor.
  
     Input types:
     del_c, del_r= Position offset of the star from frame center. (integer)
-    total_intensity= Filter name 'NB07' (string)
+    ftr_name= Filter name 'NB07' (string). After the provided name it looks up the total intensity
+    from a predefined dictionary.
     '''
  
     # Dictionary of photoelectrons/pixel/second * degradation_factor
@@ -35,7 +36,7 @@ def sim_obs(del_c, del_r, total_intensity, h=320, w=320, BIAS=1500):
     #Make a blank canvas
     canvas = np.zeros((h, w))
     # Make the star
-    star= psf*pe[total_intensity]/np.sum(psf)
+    star= psf*pe[ftr_name]/np.sum(psf)
     # Replace a portion of the canvas with the pixel data 
     canvas[int(h/2+del_r):int(h/2+del_r+np.shape(star)[0]),
            int(w/2+del_c):int(w/2+del_c+np.shape(star)[1])]=star
