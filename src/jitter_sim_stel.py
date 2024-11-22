@@ -5,8 +5,9 @@ from simulated_obs import *
 import argparse
 from astropy.time import Time
 import os
+from scipy.interpolate import interp1d
 
-def jit_sim(ftr_name, save, sun_c_path, plot=True, plot_save_path=None, date_str=None):
+def jit_sim(ftr_name, save, sun_c_path, dt, plot=True, plot_save_path=None, date_str=None):
     # Define paths
     current_file_path = os.path.abspath(__file__)
     project_path = os.path.dirname(current_file_path)
@@ -44,12 +45,14 @@ def jit_sim(ftr_name, save, sun_c_path, plot=True, plot_save_path=None, date_str
         return
     
     # Convert the 'date' field to Time
-    date = Time(data['date'])
-    x = data['x'] - data['x'][0]  # Adjust x coordinates to start from 0
-    y = data['y'] - data['y'][0]  # Adjust y coordinates to start from 0
+    date1 = Time(data['date'])
+    x1 = data['x'] - data['x'][0]  # Adjust x coordinates to start from 0
+    y1 = data['y'] - data['y'][0]  # Adjust y coordinates to start from 0
+
+    x_func = interp1d((date1.jd-date1[0].jd)*86400., x1); y_func = interp1d((date1.jd-date1[0].jd)*86400., y1)
     
-    frames = len(x)
-    date = (date.jd - date[0].jd) * 86400.  # Convert to seconds relative to the first date
+    frames = 600; 
+    #date = (date.jd - date[0].jd) * 86400.  # Convert to seconds relative to the first date
 
     # Set up plotting
     if plot:
@@ -61,18 +64,24 @@ def jit_sim(ftr_name, save, sun_c_path, plot=True, plot_save_path=None, date_str
     # Loop through frames and simulate observations
     for frame in range(frames):
         try:
-            canvas = sim_obs(x[frame], y[frame], ftr_name)  # Simulate the observation
+            t = 0. + frame* dt; x = x_func(t); y = y_func(t)
+            canvas = sim_obs(x, y, ftr_name)  # Simulate the observation
             
             if plot:
                 plt.clf()  # Clear the current figure to update it
                 im = plt.imshow(canvas, origin='lower', cmap='inferno', vmin=vmin, vmax=vmax)
                 # plt.colorbar(im)
-                plt.title(f'NB7 t={date[frame]:.2f} s')
+                plt.title(f'{ftr_name} t={t:.2f} s')
                 plt.draw()
                 plt.pause(0.05)  # Adjust to control the update speed
             
             if save:
-                save_path = os.path.join(sav, f'{ftr_name}_{frame}.fits')
+                if(frame<10):
+                    save_path = os.path.join(sav, f'{ftr_name}_00{frame}.fits')
+                elif(frame<100):
+                    save_path = os.path.join(sav, f'{ftr_name}_0{frame}.fits')
+                else:
+                    save_path = os.path.join(sav, f'{ftr_name}_{frame}.fits')
                 fits.writeto(save_path, canvas, overwrite=True)
                 print(f"Frame {frame}: Saved {save_path}")
             
@@ -99,9 +108,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--sun_c_path', type=str, default='/Users/soumyaroy/Desktop/masterlimbfit/', help='Path to the project directory')
     parser.add_argument('--date', type=str, required=True, help='Date of the suncenter file to be used (in format YYYY-MM-DD)')
+    parser.add_argument('--dt', type=float, default=8., help='The total amount of time spent to expose and read one frame')
     parser.add_argument('--ftr_name', type=str, help='Name of the filter to be simulated. Allowed values are: NB01, NB02, NB03, NB04, NB05, NB06, NB07, NB08, BB01, BB02, BB03')
     parser.add_argument('--plot_save_path', type=str, default=None, help='Path to save the individual plots')
     parser.add_argument('--save', action='store_true', help='Flag to save the fits files in ../data/processed (default False)')
     args = parser.parse_args()
 
-    jit_sim(sun_c_path=args.sun_c_path, ftr_name=args.ftr_name, save=args.save, plot_save_path=args.plot_save_path, date_str=args.date)
+    jit_sim(sun_c_path=args.sun_c_path, ftr_name=args.ftr_name, dt=args.dt, save=args.save, plot_save_path=args.plot_save_path, date_str=args.date)
