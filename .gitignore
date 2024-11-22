@@ -1,5 +1,4 @@
 $ cat .gitignore
 data/processed/*
-data/external/*
 data/raw/*
 products/*
