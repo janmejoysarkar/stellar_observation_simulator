@@ -7,6 +7,7 @@
 @hostname: suitpoc1
 
 DESCRIPTION
+Prepared to calculate ensquared energy for simulated images.
 """
 
 import numpy as np

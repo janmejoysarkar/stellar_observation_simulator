@@ -60,6 +60,9 @@ def sim_obs(del_c, del_r, ftr_name, h=320, w=320, BIAS=1500):
     canvas = canvas + read_noise # final image
     return canvas
 
+def bin_no_noise():
+
+
 if __name__=='__main__':
     PLOT, SAVE=True, True
     ftr_ls= ['NB01','NB02','NB03','NB04','NB05','NB06','NB07','NB08','BB01','BB02','BB03']
